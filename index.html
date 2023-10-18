@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Client</title>
+</head>
+<body>
+    <h1>WebSocket Client</h1>
+    <div id="messages"></div>
+    <input type="text" id="message" placeholder="Zprava">
+    <button id="send">Odeslat</button>
+    <div id="status">Připojeno</div>
+
+    <script>
+        const serverAddress = "ws://127.0.0.1:8080";
+        let websocket;
+
+        function updateStatus(status) {
+            const statusDiv = document.getElementById("status");
+            statusDiv.innerHTML = status;
+        }
+
+        function connectWebSocket() {
+            websocket = new WebSocket(serverAddress);
+
+            websocket.onmessage = function(event) {
+                const messagesDiv = document.getElementById("messages");
+                const message = event.data;
+                if (message === "Byl jste zakázán za použití zakázaného slova.") {
+                    alert(message);
+                    websocket.close();
+                } else {
+                    messagesDiv.innerHTML = `<p>${message}</p>` + messagesDiv.innerHTML;
+                }
+            };
+
+            websocket.onclose = function(event) {
+                updateStatus("Odpojeno, pokus o opetovne pripojeni...");
+                setTimeout(function () {
+                    connectWebSocket();
+                }, 3000);
+            };
+
+            websocket.onopen = function(event) {
+                updateStatus("Pripojeni obnoveno");
+            };
+        }
+
+        connectWebSocket();
+
+        document.getElementById("send").addEventListener("click", function() {
+            const message = document.getElementById("message").value;
+            websocket.send(message);
+        });
+    </script>
+</body>
+</html>
